@@ -1,17 +1,11 @@
 from django.db import models
-
-
-class users(models.Model):
-    id = models.IntegerField().primary_key
-    email = models.CharField(unique=True, max_length=255)
-    password = models.CharField(max_length=255)
-    name = models.CharField(max_length=255)
+from django.contrib.auth.models import User
 
 
 class post (models.Model):
     id = models.IntegerField().primary_key
     owner_id = models.ForeignKey(
-        users,
+        User,
         on_delete=models.CASCADE
     )
     # add images
@@ -25,7 +19,7 @@ class comment (models.Model):
         on_delete=models.CASCADE
     )
     user_id = models.ForeignKey(
-        users,
+        User,
         on_delete=models.CASCADE
     )
     comment_content = models.CharField(max_length=255)
