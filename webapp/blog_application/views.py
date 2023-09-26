@@ -46,7 +46,7 @@ class createView (View):
 
 class DetailPostView(DetailView):
     def get(self, request, pk):
-        comments = comment.objects.all().filter(post_id=pk)
+        comments = comment.objects.all().filter(post_id=pk).order_by('publish_data')
         post = Post.objects.all().filter(id=pk)
         return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post[0]})
 
