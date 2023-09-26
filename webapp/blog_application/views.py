@@ -52,5 +52,5 @@ class DetailPostView(DetailView):
 
     def post(self, request, pk):
         comment.objects.create(
-            post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id, )
+            post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id)
         return redirect('index')
