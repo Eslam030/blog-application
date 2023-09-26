@@ -10,7 +10,7 @@
             <p class="date" >
                 Published {{ post.publish }} by {{ post.owner}}
             </p>
-            {{ post.content|safe }}
+            {{ post.content|safe|linebreaks }}
         </div>
 
         <div class="col-md-6 col-12 mx-mx-auto mx-5 mt-5 mb-5">
