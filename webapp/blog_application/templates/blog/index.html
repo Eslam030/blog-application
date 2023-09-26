@@ -6,22 +6,22 @@
         <div class="col-md-6 col-12 mx-md-auto mx-3 mt-5 mb-5">
             <h1 class="fw-bolder">Blogs</h1>
         </div>
-        {% if user.is_authenticated %}
-        <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5">
-            <a href="{% url 'Create' %}" class="btn btn-primary">Create a new post</a>
-        </div>
-        {% endif %}
+            {% if user.is_authenticated %}
+            <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5">
+                <a href="{% url 'Create' %}" class="btn btn-primary">Create a new post</a>
+            </div>
+            {% endif %}
         {% for obj in object_list %}
         <div class = "row">
-            <div class = "col-md-6 col-12 mx-mx-auto mx-3 mt-5 mb-5">
+            <div class = "col-md-6 col-12 mx-mx-auto mx-5 mt-5 mb-5">
                 <h3 class = "fw-bold">{{ obj.title }}</h3>
                 <p class = "text-muted">{{obj.publish_date}}</p>
                 <p class = "text-muted">{{obj.owner.username}}</p>
                 <div class = "my-3">
-                    {{ obj.content|truncatewords_html:50|safe}}
+                    {{ obj.content|truncatewords_html:30|safe}}
                 </div>
 
-                <a href = "#" style="color : red">Read more</a>
+                <a href = "{% url 'detail_post' obj.id%}" style="color : red">Read more</a>
             </div>
         </div>
         {% endfor %}

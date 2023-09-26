@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from .forms import UserRegisterForm
 from django.http import HttpResponse
-from django.views.generic import ListView
+from django.views.generic import ListView , DetailView
 from .models import Post
 
 # Create your views here.
@@ -42,3 +42,8 @@ class createView (View):
         Post.objects.create(title=title, statue=status,
                             content=content, owner=request.user)
         return render(request, 'blog/index.html')
+    
+
+class DetailPostView(DetailView):
+    model = Post
+    template_name = 'blog/blog_post.html'
