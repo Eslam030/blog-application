@@ -3,6 +3,7 @@ from django.views import View
 from .forms import UserRegisterForm
 from django.http import HttpResponse
 from django.views.generic import ListView, DetailView
+from django.contrib import messages
 from .models import Post, comment
 
 # Create your views here.
@@ -25,9 +26,13 @@ class RegisterView(View):
 
         if form.is_valid():
             form.save()
+            messages.success(
+                request, "Your are signed up successfully")
             return redirect('index')
         else:
-            return redirect('index')
+            messages.error(
+                request, "Wrong input data please re enter it.")
+            return redirect('register')
 
 
 class createView (View):
@@ -45,7 +50,9 @@ class createView (View):
 
 
 class DetailPostView(DetailView):
+
     def get(self, request, pk):
+
         comments = comment.objects.all().filter(post_id=pk).order_by('publish_data')
         post = Post.objects.all().filter(id=pk)
         return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post[0]})
