@@ -20,8 +20,12 @@
                     {% csrf_token %}
                     <input type="text" name="comment_field" class="form-control-lg" placeholder="Type your comment...">
                     <input type="hidden" name = "test" value = "blog">
+                    {% for g in user.groups.all %}
+                    {% if g.name != 'User-Group' %}
+                        <input type="submit" value="comment" class="btn mx-3" method = "post">
+                    {% endif %}
+                    {% endfor %}
                     {% if user.is_authenticated %}
-                    <input type="submit" value="comment" class="btn mx-3" method = "post">
                     {% endif %}
                 </form>
             </div>
