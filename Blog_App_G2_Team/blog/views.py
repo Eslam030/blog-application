@@ -38,6 +38,7 @@ class RegisterView(View):
             if form.cleaned_data['is_superuser'] == True:
                 group = get_object_or_404(Group, name="Admin-Group")
                 user.groups.add(group)
+                user.is_staff = True
                 user.save()
             elif form.cleaned_data['is_staff'] == True:
                 group = get_object_or_404(Group, name='Editor-Group')
