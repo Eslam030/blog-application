@@ -7,6 +7,13 @@
         <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto"></ul>
         <ul class="navbar-nav">
+            {% for g in user.groups.all %}
+            {% if g.name == "Admin-Group" %}
+            <li class="nav-item"> 
+                <a class="nav-link" href="{% url 'admin' %}"><i class='bx bx-log-out'></i> admin</a>
+            </li>
+            {% endif %}
+            {% endfor %}
             {% if request.user.is_authenticated %}
                 <li class="nav-item">
                     {% if user.is_authenticated %}

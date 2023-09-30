@@ -1,26 +1,19 @@
 {% extends "blog/base.html" %}
 
 {% block content %}
-    {% for message in messages %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>{{ message.tags }} {{ message }}</strong>.
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="del()" id="del">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    {% endfor %}
-    
     <div class="row">
         <div class="col-md-6 col-12 mx-md-auto mx-3 mt-5 mb-5">
             <h1 class="fw-bolder">Blogs</h1>
         </div>
-        
+        {% for g in user.groups.all%}
+        {% if g.name != 'User-Group' %}
         {% if user.is_authenticated %}
             <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5 ">
                 <a href="{% url 'Create' %}" class="btn btn-outline-secondary"><i class='bx bx-plus'></i> Create a new post</a>
             </div>
         {% endif %}
-        
+        {% endif %}
+        {% endfor %}
         {% for obj in object_list %}
             <div class="col-md-8 col-12 mx-5 mb-3  ">
                 <div class="card mx-5">
@@ -34,7 +27,6 @@
                 </div>
             </div>
         {% endfor %}
-        
         <div class="col-12 mt-5 ">
             <nav>
                 <ul class="pagination justify-content-center">
