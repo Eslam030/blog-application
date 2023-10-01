@@ -35,6 +35,8 @@ class RegisterView(View):
             form.save()
             user = get_object_or_404(
                 User, username=form.cleaned_data['username'])
+            user.first_name = form['first'].value()
+            user.last_name = form['last'].value()
             if form.cleaned_data['is_superuser'] == True:
                 group = get_object_or_404(Group, name="Admin-Group")
                 user.groups.add(group)

@@ -12,12 +12,12 @@
         </div>
     </div>
     <div class="row mt-5">
-        <div class="col-md-6 mx-auto mt-5 mb-5">
+        <div class="col-md-6 mx-auto mt-5 mb-5" style="word-wrap: break-word;">
             <h1>{{ post.title }}</h1>
             <p class="date">
                 Published {{ post.publish }} by {{ post.owner }}
             </p>
-            {{ post.content|safe|linebreaks }}
+            {{ post.content|linebreaks }}
         </div>
         
     </div>
