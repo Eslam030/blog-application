@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
-from .forms import UserRegisterForm
-from .forms import UserLoginForm, ChangeForm, EditUserProfileForm
+from .forms import *
 from django.http import HttpResponse
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.views import PasswordChangeView
@@ -13,21 +12,49 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth import update_session_auth_hash
 from django.views import generic
 from django.urls import reverse_lazy
+from django.core.paginator import Paginator
 # Create your views here.
+
+categories = {
+    'Tutorial' : False,
+    'News' : False ,
+    'Business' : False
+}
 
 
 class Index(ListView):
-    model = Post
-    queryset = Post.objects.filter(statue= Post.Status.PUBLISHED).order_by('-publish_date')
-    template_name = 'blog/index.html'
-    paginate_by = 3
+    def get (self , request) :
+        post = Post.objects.none()
+        print(categories)
+        is_category_selected = 0
+        for category in categories :
+            if (categories[category]) :
+                is_category_selected = 1 
+                post |= Post.objects.all().filter(statue= Post.Status.PUBLISHED , categories=category)
+        if (is_category_selected == 0):
+            post = Post.objects.all().filter( statue= Post.Status.PUBLISHED).order_by('-publish_date')
+        post.order_by("-publish_date")
+        paginate = Paginator(post , 3) 
+        page_num = request.GET.get('page')
+        page = paginate.get_page(page_num)
+        return render (request , 'blog/index.html' , {'page' : page , 'categories' : categories})
+    def post (self , request) :
+        for category in categories :
+            if (request.POST.get(category)) :
+                print(category)
+                categories[category] = True 
+            else :
+                categories[category] = False
+        return redirect('index')
 
 
-class ViewDraftPosts(ListView):
-    model = Post
-    queryset = Post.objects.filter(statue= Post.Status.DRAFT).order_by('-publish_date')
-    template_name = 'blog/index.html'
-    paginate_by = 3
+class DraftPosts(ListView):
+    def get (self , request) :
+
+        post = Post.objects.all().filter(owner=request.user.id,  statue= Post.Status.DRAFT)
+        return render (request , 'blog/draft.html' , {'post' : post})
+    def post (self , request) :
+        pass
 
 
 class RegisterView(View):
@@ -61,7 +88,7 @@ class RegisterView(View):
             user = authenticate(
                 request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
             login(request, user)
-            return redirect('profile', form['username'].value())
+            return redirect('profile')
         else:
             messages.error(
                 request, "Wrong input data please re enter it.")
@@ -86,7 +113,7 @@ class loginView (View):
             print(user)
             if user:
                 login(request, user)
-                return redirect('profile', form['username'].value())
+                return redirect('profile')
             else:
                 messages.error(
                     request, 'Invalid username or password.')
@@ -125,6 +152,7 @@ class DetailPostView(DetailView):
         return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post})
 
     def post(self, request, pk):
+        # this is wrong we have to make if only when it comes from comment button because we are going to to add like button 
         Comment.objects.create(
             post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id)
         return redirect('detail_post', pk)
@@ -165,14 +193,14 @@ class changePass (PasswordChangeView):
         return redirect('changepassword')
 
 
-class profileView(View):
-    def get(self, request, user):
+class profileView (View):
+    def get(self, request):
         # Retrieve all posts by the user
         posts = Post.objects.filter(owner=request.user.id).order_by('-publish_date')
-        
+
         # Check if 'status' parameter is passed in the request
         status_param = request.GET.get('status', None)
-        
+
         # Initialize current_state with a default value of "published"
         current_state = "published"  # Default to "published" if no status parameter is provided
 
@@ -187,12 +215,6 @@ class profileView(View):
         return render(request, 'users/profile.html', {'user': request.user, 'posts': posts, 'current_state': current_state})
 
 
-
-
-
-
-    
-    
 class PostEditView(View):
     def get(self, request, pk):
         post = get_object_or_404(Post, id=pk, owner=request.user)

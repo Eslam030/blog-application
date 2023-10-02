@@ -1,52 +1,52 @@
 {% extends "blog/base.html" %}
 
 {% block content  %}
-<div class="container"> 
-  <div class="card border-dark mb-3 mx-5 mt-4 ">
+<div class="container">  
+    <div class="card border-dark mb-3 mx-5 mt-4 ">
     <div class="card-header bg-transparent border-dark fs-4" >{{user.username}}'s profile</div>
-    <div class="card-body ">
-        <!-- check username-->
-        {% if user.username%}
-            <p class="card-text">User_name : {{user.username}} </p>
-        {% else%}
-            <div class="alert alert-warning" role="alert">
-                <b>username</b> is not provided by user.
-            </div>
-        {% endif %}
-        <!-- check first name-->
-        {% if user.first_name%}
-            <p class="card-text">First Name : {{user.first_name}} </p>
-        {% else%}
-            <div class="alert alert-warning" role="alert">
-                <b>First name</b> is not provided by user.
-            </div>
-        {% endif %}
-        <!-- check last name-->
-        {% if user.last_name%}
-            <p class="card-text">Last Name : {{user.last_name}} </p>
-        {% else%}
-            <div class="alert alert-warning" role="alert">
-                <b>Last Name</b> is not provided by user.
-            </div>
-        {% endif %}
-        <!-- check email-->
-        {% if user.email%}
-            <p class="card-text">Email : {{user.email}} </p>
-        {% else%}
-            <div class="alert alert-warning" role="alert">
-                <b>Email</b> is not provided by user.
-            </div>
-        {% endif %}
-      
+        <div class="card-body ">
+            <!-- check username-->
+            {% if user.username%}
+                <p class="card-text">User_name : {{user.username}} </p>
+            {% else%}
+                <div class="alert alert-warning" role="alert">
+                    <b>username</b> is not provided by user.
+                </div>
+            {% endif %}
+            <!-- check first name-->
+            {% if user.first_name%}
+                <p class="card-text">First Name : {{user.first_name}} </p>
+            {% else%}
+                <div class="alert alert-warning" role="alert">
+                    <b>First name</b> is not provided by user.
+                </div>
+            {% endif %}
+            <!-- check last name-->
+            {% if user.last_name%}
+                <p class="card-text">Last Name : {{user.last_name}} </p>
+            {% else%}
+                <div class="alert alert-warning" role="alert">
+                    <b>Last Name</b> is not provided by user.
+                </div>
+            {% endif %}
+            <!-- check email-->
+            {% if user.email%}
+                <p class="card-text">Email : {{user.email}} </p>
+            {% else%}
+                <div class="alert alert-warning" role="alert">
+                    <b>Email</b> is not provided by user.
+                </div>
+            {% endif %}
+        
+        </div>
+        <div class="card-footer bg-transparent border-dark">
+            <a class="btn btn-md btn-info ml-4" href="{% url 'edit_profile'%}">Edit Account</a>
+            <a class="btn btn-md btn-primary ml-4" href="{% url 'changepassword' %}">change password</a>
+            <a class="btn btn-md btn-danger ml-4" href="{% url 'deleteAccount' user=user.username %}">Delete Account</a>
+        </div>
     </div>
-    <div class="card-footer bg-transparent border-dark">
-        <a class="btn btn-md btn-info ml-4" href="{% url 'edit_profile'%}">Edit Account</a>
-        <a class="btn btn-md btn-primary ml-4" href="{% url 'changepassword' %}">change password</a>
-        <a class="btn btn-md btn-danger ml-4" href="{% url 'deleteAccount' user=user.username %}">Delete Account</a>
-    </div>
-  </div>
 
-  <hr>
+    <hr>
     <h3 class="mx-5">My Posts</h3>
     <div class="btn-group btn-group-toggle mb-3 mx-5 mt-4" data-toggle="buttons">
         <a class="btn btn-outline-info {% if current_state == 'published' %}active{% endif %}" href="?status=published">
@@ -56,7 +56,7 @@
             Drafts
         </a>
     </div>
-    
+
     <div class="row">
         {% for post_data in posts %}
         <div class="col-md-6 {% if post_data.statue == 'published' %}published{% endif %}">
@@ -118,4 +118,5 @@
     });
     </script>
 </div>
+
 {% endblock content %}
