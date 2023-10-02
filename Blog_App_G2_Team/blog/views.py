@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from .forms import *
 from django.http import HttpResponse
@@ -16,61 +16,64 @@ from django.core.paginator import Paginator
 # Create your views here.
 
 categories = {
-    'Tutorial' : False,
-    'News' : False ,
-    'Business' : False
+    'Tutorial': False,
+    'News': False,
+    'Business': False
 }
 
 
 class Index(ListView):
-    def get (self , request) :
+    def get(self, request):
         post = Post.objects.none()
         print(categories)
         is_category_selected = 0
-        for category in categories :
-            if (categories[category]) :
-                is_category_selected = 1 
-                post |= Post.objects.all().filter(statue= Post.Status.PUBLISHED , categories=category)
+        for category in categories:
+            if (categories[category]):
+                is_category_selected = 1
+                post |= Post.objects.all().filter(statue=Post.Status.PUBLISHED, categories=category)
         if (is_category_selected == 0):
-            post = Post.objects.all().filter( statue= Post.Status.PUBLISHED).order_by('-publish_date')
+            post = Post.objects.all().filter(
+                statue=Post.Status.PUBLISHED).order_by('-publish_date')
         post.order_by("-publish_date")
-        paginate = Paginator(post , 3) 
+        paginate = Paginator(post, 3)
         page_num = request.GET.get('page')
         page = paginate.get_page(page_num)
-        return render (request , 'blog/index.html' , {'page' : page , 'categories' : categories})
-    def post (self , request) :
-        for category in categories :
-            if (request.POST.get(category)) :
+        return render(request, 'blog/index.html', {'page': page, 'categories': categories})
+
+    def post(self, request):
+        for category in categories:
+            if (request.POST.get(category)):
                 print(category)
-                categories[category] = True 
-            else :
+                categories[category] = True
+            else:
                 categories[category] = False
         return redirect('index')
 
 
 class DraftPosts(ListView):
-    def get (self , request) :
+    def get(self, request):
 
-        post = Post.objects.all().filter(owner=request.user.id,  statue= Post.Status.DRAFT)
-        return render (request , 'blog/draft.html' , {'post' : post})
-    def post (self , request) :
+        post = Post.objects.all().filter(owner=request.user.id,  statue=Post.Status.DRAFT)
+        return render(request, 'blog/draft.html', {'post': post})
+
+    def post(self, request):
         pass
 
 
 class RegisterView(View):
     def get(self, request):
-        form = None 
-        if (request.GET.get('status') == 'Company') :
+        form = None
+        if (request.GET.get('status') == 'Company'):
             form = UserRegisterForm()
-        else :
+        else:
             form = CompanyRegistration()
         return render(request, 'users/register.html', {'form': form})
 
     def post(self, request):
-        form = None 
-        if (request.POST.get('status') == 'Company') :
+        form = None
+        if (request.POST.get('status') == 'Company'):
             form = UserRegisterForm(request.POST)
-        else :
+        else:
             form = CompanyRegistration()
         if form.is_valid():
             form.save()
@@ -145,7 +148,7 @@ class createView (View):
             status = request.POST['status']
             content = request.POST['content']
             category = request.POST['categories']
-            Post.objects.create(title=title, statue=status,categories=category,
+            Post.objects.create(title=title, statue=status, categories=category,
                                 content=content, owner=request.user)
             return redirect('index')
         else:
@@ -160,7 +163,7 @@ class DetailPostView(DetailView):
         return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post})
 
     def post(self, request, pk):
-        # this is wrong we have to make if only when it comes from comment button because we are going to to add like button 
+        # this is wrong we have to make if only when it comes from comment button because we are going to to add like button
         Comment.objects.create(
             post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id)
         return redirect('detail_post', pk)
@@ -204,18 +207,20 @@ class changePass (PasswordChangeView):
 class profileView (View):
     def get(self, request):
         # Retrieve all posts by the user
-        posts = Post.objects.filter(owner=request.user.id).order_by('-publish_date')
+        posts = Post.objects.filter(
+            owner=request.user.id).order_by('-publish_date')
 
         # Check if 'status' parameter is passed in the request
         status_param = request.GET.get('status', None)
 
         # Initialize current_state with a default value of "published"
-        current_state = "published"  # Default to "published" if no status parameter is provided
+        # Default to "published" if no status parameter is provided
+        current_state = "published"
 
         if status_param == 'draft':
             posts = posts.filter(statue=Post.Status.DRAFT)
             current_state = "draft"
-        else: 
+        else:
             status_param == 'published'
             posts = posts.filter(statue=Post.Status.PUBLISHED)
             current_state = "published"
@@ -227,6 +232,7 @@ class PostEditView(View):
     def get(self, request, pk):
         post = get_object_or_404(Post, id=pk, owner=request.user)
         return render(request, 'blog/edit_post.html', {'post': post})
+
     def post(self, request, pk):
         post = get_object_or_404(Post, id=pk, owner=request.user)
         title = request.POST['title']
