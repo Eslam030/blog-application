@@ -59,11 +59,19 @@ class DraftPosts(ListView):
 
 class RegisterView(View):
     def get(self, request):
-        form = UserRegisterForm()
+        form = None 
+        if (request.GET.get('status') == 'Company') :
+            form = UserRegisterForm()
+        else :
+            form = CompanyRegistration()
         return render(request, 'users/register.html', {'form': form})
 
     def post(self, request):
-        form = UserRegisterForm(request.POST)
+        form = None 
+        if (request.POST.get('status') == 'Company') :
+            form = UserRegisterForm(request.POST)
+        else :
+            form = CompanyRegistration()
         if form.is_valid():
             form.save()
             user = get_object_or_404(
@@ -219,7 +227,6 @@ class PostEditView(View):
     def get(self, request, pk):
         post = get_object_or_404(Post, id=pk, owner=request.user)
         return render(request, 'blog/edit_post.html', {'post': post})
-
     def post(self, request, pk):
         post = get_object_or_404(Post, id=pk, owner=request.user)
         title = request.POST['title']

@@ -47,5 +47,18 @@ class Comment (models.Model):
     def __str__(self):
         return self.comment_content
 
+class company (models.Model) :
+    name = models.CharField(max_length=255) 
+    mail = models.EmailField()
+
+class CompanyWriters (models.Model) :
+    company = models.ForeignKey(
+        company , 
+        on_delete= models.CASCADE 
+    )
+    Writer = models.ForeignKey(
+        User , 
+        on_delete=models.CASCADE 
+    )
 
 # Create your models here.
