@@ -6,7 +6,6 @@ from django.views.generic import DetailView
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth import logout, login, authenticate
 from django.contrib import messages
-from .models import Post, Comment
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import update_session_auth_hash
@@ -16,19 +15,15 @@ from django.core.paginator import Paginator
 
 # Create your views here.
 
-categories = {
-    'Tutorial': False,
-    'News': False,
-    'Business': False
-}
-
 
 class Index(View):
     def get(self, request):
         post = Post.objects.none()
         is_category_selected = 0
-        for category in categories:
-            if (categories[category]):
+        categoriesToCheck = categories.objects.all()
+        for category in categoriesToCheck:
+            print(category.checked)
+            if (category.checked):
                 is_category_selected = 1
                 post |= Post.objects.all().filter(statue=Post.Status.PUBLISHED, categories=category)
         if (is_category_selected == 0):
@@ -38,14 +33,17 @@ class Index(View):
         paginate = Paginator(post, 3)
         page_num = request.GET.get('page')
         page = paginate.get_page(page_num)
-        return render(request, 'blog/index.html', {'page': page, 'categories': categories})
+        return render(request, 'blog/index.html', {'page': page, 'categories': categoriesToCheck})
 
     def post(self, request):
-        for category in categories:
-            if (request.POST.get(category)):
-                categories[category] = True
+        categoriesToCheck = categories.objects.all()
+        for category in categoriesToCheck:
+            if (request.POST.get(category.name)):
+                category.checked = True
+                category.save()
             else:
-                categories[category] = False
+                category.checked = False
+                category.save()
         return redirect('index')
 
 

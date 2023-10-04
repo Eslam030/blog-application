@@ -69,4 +69,8 @@ class CompanyWriters (models.Model):
     def __str__(self):
         return f'{self.company.name} --> {self.Writer.username}'
 
+
+class categories (models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    checked = models.BooleanField()
 # Create your models here.

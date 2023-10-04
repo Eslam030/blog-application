@@ -16,8 +16,9 @@
             {% csrf_token %}
             <div class="col-md-3  mx-5 mt-5 mb-5 ml-auto">
                 <p> Choose what you want to see </p>
+                {% for category in categories %}
                 <div class="form-check">
-                    {% if categories|category:'Tutorial'%}
+                    {% if category.checked %}
                     <input class="form-check-input" type="checkbox" name = "Tutorial" checked>
                     {% else %}
                     <input class="form-check-input" type="checkbox" name = "Tutorial">
@@ -26,26 +27,7 @@
                         Tutorial
                     </label>
                 </div>
-                <div class="form-check">
-                    {% if categories|category:'Business'%}
-                    <input class="form-check-input" type="checkbox" name = "Business" checked>
-                    {% else %}
-                    <input class="form-check-input" type="checkbox" name = "Business">
-                    {% endif %}
-                    <label class="form-check-label" for="defaultCheck1">
-                        Business
-                    </label>
-                </div>
-                <div class="form-check mb-3">
-                    {% if categories|category:'News'%}
-                    <input class="form-check-input" type="checkbox" name = "News" checked>
-                    {% else %}
-                    <input class="form-check-input" type="checkbox" name = "News">
-                    {% endif %}
-                    <label class="form-check-label" for="defaultCheck1">
-                        News
-                    </label>
-                </div>
+                {% endfor %}
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>
         </form>
