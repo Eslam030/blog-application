@@ -13,6 +13,8 @@ from django.contrib.auth import update_session_auth_hash
 from django.views import generic
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
+from django.contrib.auth.hashers import make_password
+
 # Create your views here.
 
 categories = {
@@ -25,7 +27,6 @@ categories = {
 class Index(ListView):
     def get(self, request):
         post = Post.objects.none()
-        print(categories)
         is_category_selected = 0
         for category in categories:
             if (categories[category]):
@@ -43,7 +44,6 @@ class Index(ListView):
     def post(self, request):
         for category in categories:
             if (request.POST.get(category)):
-                print(category)
                 categories[category] = True
             else:
                 categories[category] = False
@@ -63,47 +63,63 @@ class DraftPosts(ListView):
 class RegisterView(View):
     def get(self, request):
         form = None
-        if (request.GET.get('status') == 'Company'):
-            form = UserRegisterForm()
-        else:
+        if (request.GET.get('status') == 'company'):
             form = CompanyRegistration()
-        return render(request, 'users/register.html', {'form': form})
+        else:
+            form = UserRegisterForm()
+        return render(request, 'users/register.html', {'form': form, 'status': request.GET.get('status')})
 
     def post(self, request):
-        form = None
-        if (request.POST.get('status') == 'Company'):
-            form = UserRegisterForm(request.POST)
+        filterData = request.POST.copy()
+        is_company = filterData['data'] == 'company'
+        del filterData['data']
+        if (is_company):
+            form = CompanyRegistration(filterData)
         else:
-            form = CompanyRegistration()
+            form = UserRegisterForm(filterData)
         if form.is_valid():
-            form.save()
-            user = get_object_or_404(
-                User, username=form.cleaned_data['username'])
-            user.first_name = form['first'].value()
-            user.last_name = form['last'].value()
-            if form.cleaned_data['is_superuser'] == True:
-                group = get_object_or_404(Group, name="Admin-Group")
-                user.groups.add(group)
-                user.is_staff = True
-                user.save()
-            elif form.cleaned_data['is_staff'] == True:
-                group = get_object_or_404(Group, name='Editor-Group')
+            if (is_company):
+                company.objects.create(
+                    name=form['username'].value(), mail=form['email'].value())
+                form.save()
+                user = authenticate(
+                    request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
+                login(request, user)
+                group = get_object_or_404(Group, name='Company')
                 user.groups.add(group)
                 user.save()
             else:
-                group = get_object_or_404(Group, name='User-Group')
-                user.groups.add(group)
-                user.save()
+                form.save()
+                user = get_object_or_404(
+                    User, username=form.cleaned_data['username'])
+                user.first_name = form['first'].value()
+                user.last_name = form['last'].value()
+                if form.cleaned_data['is_superuser'] == True:
+                    group = get_object_or_404(Group, name="Admin-Group")
+                    user.groups.add(group)
+                    user.is_staff = True
+                    user.save()
+                elif form.cleaned_data['is_staff'] == True:
+                    group = get_object_or_404(Group, name='Editor-Group')
+                    user.groups.add(group)
+                    user.save()
+                else:
+                    group = get_object_or_404(Group, name='User-Group')
+                    user.groups.add(group)
+                    user.save()
+                user = authenticate(
+                    request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
+                login(request, user)
             messages.success(
                 request, "Your are signed up successfully")
-            user = authenticate(
-                request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
-            login(request, user)
             return redirect('profile')
         else:
-            messages.error(
-                request, "Wrong input data please re enter it.")
-            return redirect('register')
+            if (is_company):
+                url = reverse_lazy('register' + '?status=company')
+                print(url)
+                messages.error(
+                    request, "Wrong input data please re enter it.")
+                return redirect('register')
 
 
 class loginView (View):

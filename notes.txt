@@ -13,3 +13,9 @@
 - A solution is very simple implement another class called users that inherits from user 
   and when check authentication 
 - empty comment 
+
+
+- a writer should have a Company
+- user without company is a signed user
+- company is a model 
+- 
