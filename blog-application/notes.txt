@@ -1,0 +1,21 @@
+!!! what is done will be written beside it "(done)"
+
+- email added for the opt authentication 
+- adding likes
+- adding first and last name to the sign up form 
+- adding unit testing 
+- when sign in as admin in admin panel it also signed in in the main project
+  so the only found solution is to make another app called admin and implement admin functionalities 
+- add middleware for delaying message delete 
+- manage messages in the base.html --> (done)
+- bug if i sign in in the main app but an admin sign in the admin panel the main app will be signed in with the admin 
+  temp solve is to prevent admin from visiting the main app for now !
+- A solution is very simple implement another class called users that inherits from user 
+  and when check authentication 
+- empty comment 
+
+
+- a writer should have a Company
+- user without company is a signed user
+- company is a model 
+- 
