@@ -1,5 +1,5 @@
 {% extends "blog/base.html" %}
-
+{% load new_filters%}
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block content %}
@@ -12,12 +12,15 @@
         </div>
     </div>
     <div class="row mt-5">
-        <div class="col-md-6 mx-auto mt-5 mb-5">
+        <div class="col-md-6 mx-auto mt-5 mb-5" style="word-wrap: break-word;">
             <h1>{{ post.title }}</h1>
             <p class="date">
-                Published {{ post.publish }} by {{ post.owner }}
+                Published: {{ post.publish }} by {{ post.owner }}
             </p>
-            {{ post.content|safe|linebreaks }}
+            <p class="date">
+                Category: {{ post.categories }}
+            </p>
+            Content: {{ post.content|linebreaks }}
         </div>
         
     </div>
@@ -27,7 +30,8 @@
                 {% csrf_token %}
                 <input type="text" name="comment_field" class="form-control-lg" placeholder="Type your comment...">
                 <input type="hidden" name="test" value="blog">
-                {% if user.is_authenticated %}
+                <!--edit this -->
+                {% if not user|is_viewer%}
                 <input type="submit" value="Comment" class="btn mx-3">
                 {% endif %}
             </form>

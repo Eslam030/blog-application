@@ -1,100 +1,170 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from .forms import UserRegisterForm
-from .forms import UserLoginForm , ChangeForm , EditUserProfileForm
+from .forms import *
 from django.http import HttpResponse
-from django.views.generic import ListView, DetailView 
+from django.views.generic import ListView, DetailView
 from django.contrib.auth.views import PasswordChangeView
-from django.contrib.auth import logout , login , authenticate
+from django.contrib.auth import logout, login, authenticate
 from django.contrib import messages
 from .models import Post, Comment
-from django.contrib.auth.models import User,Group
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import update_session_auth_hash
 from django.views import generic
 from django.urls import reverse_lazy
+from django.core.paginator import Paginator
+from django.contrib.auth.hashers import make_password
+
 # Create your views here.
+
+categories = {
+    'Tutorial': False,
+    'News': False,
+    'Business': False
+}
 
 
 class Index(ListView):
-    model = Post
-    queryset = Post.objects.all().order_by('-publish_date')
-    template_name = 'blog/index.html'
-    paginate_by = 3
+    def get(self, request):
+        post = Post.objects.none()
+        is_category_selected = 0
+        for category in categories:
+            if (categories[category]):
+                is_category_selected = 1
+                post |= Post.objects.all().filter(statue=Post.Status.PUBLISHED, categories=category)
+        if (is_category_selected == 0):
+            post = Post.objects.all().filter(
+                statue=Post.Status.PUBLISHED).order_by('-publish_date')
+        post.order_by("-publish_date")
+        paginate = Paginator(post, 3)
+        page_num = request.GET.get('page')
+        page = paginate.get_page(page_num)
+        return render(request, 'blog/index.html', {'page': page, 'categories': categories})
+
+    def post(self, request):
+        for category in categories:
+            if (request.POST.get(category)):
+                categories[category] = True
+            else:
+                categories[category] = False
+        return redirect('index')
+
+
+class DraftPosts(ListView):
+    def get(self, request):
+
+        post = Post.objects.all().filter(owner=request.user.id,  statue=Post.Status.DRAFT)
+        return render(request, 'blog/draft.html', {'post': post})
+
+    def post(self, request):
+        pass
 
 
 class RegisterView(View):
     def get(self, request):
-        form = UserRegisterForm()
-        return render(request, 'users/register.html', {'form': form})
+        form = None
+        if (request.GET.get('status') == 'company'):
+            form = CompanyRegistration()
+        else:
+            form = UserRegisterForm()
+        return render(request, 'users/register.html', {'form': form, 'status': request.GET.get('status')})
 
     def post(self, request):
-        form = UserRegisterForm(request.POST)
+        filterData = request.POST.copy()
+        is_company = filterData['data'] == 'company'
+        del filterData['data']
+        if (is_company):
+            form = CompanyRegistration(filterData)
+        else:
+            form = UserRegisterForm(filterData)
         if form.is_valid():
-            form.save()
-            user = get_object_or_404(User,username=form.cleaned_data['username'])
-            if form.cleaned_data['is_superuser'] == True:
-                group = get_object_or_404(Group, name="Admin-Group")
-                user.groups.add(group)
-                user.save()
-            elif form.cleaned_data['is_staff'] == True: 
-                group = get_object_or_404(Group,name='Editor-Group')
+            if (is_company):
+                company.objects.create(
+                    name=form['username'].value(), mail=form['email'].value())
+                form.save()
+                user = authenticate(
+                    request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
+                login(request, user)
+                group = get_object_or_404(Group, name='Company')
                 user.groups.add(group)
                 user.save()
             else:
-                group = get_object_or_404(Group,name='User-Group')
-                user.groups.add(group)
-                user.save()
+                form.save()
+                user = get_object_or_404(
+                    User, username=form.cleaned_data['username'])
+                user.first_name = form['first'].value()
+                user.last_name = form['last'].value()
+                if form.cleaned_data['is_superuser'] == True:
+                    group = get_object_or_404(Group, name="Admin-Group")
+                    user.groups.add(group)
+                    user.is_staff = True
+                    user.save()
+                elif form.cleaned_data['is_staff'] == True:
+                    group = get_object_or_404(Group, name='Editor-Group')
+                    user.groups.add(group)
+                    user.save()
+                else:
+                    group = get_object_or_404(Group, name='User-Group')
+                    user.groups.add(group)
+                    user.save()
+                user = authenticate(
+                    request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
+                login(request, user)
             messages.success(
                 request, "Your are signed up successfully")
-            user = authenticate(request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
-            login(request , user)
-            return redirect('profile' ,form['username'].value())
+            return redirect('profile')
         else:
-            messages.error(
-                request, "Wrong input data please re enter it.")
-            return redirect('register')
+            if (is_company):
+                url = reverse_lazy('register' + '?status=company')
+                print(url)
+                messages.error(
+                    request, "Wrong input data please re enter it.")
+                return redirect('register')
 
-class loginView (View) :
+
+class loginView (View):
     def get(self, request):
         form = UserLoginForm()
         return render(request, 'users/login.html', {'form': form})
 
     def post(self, request):
+        print(request.user)
         form = UserLoginForm(request.POST)
+
         if form.is_valid():
-            if (User.objects.all().filter(username=form['username'].value()).exists()) :
-                if check_password(form['password'].value() ,User.objects.all().filter(username=form['username'].value())[0].password ) :
-                    user = authenticate(request, username=f"{form['username'].value()}", password=f"{form['password'].value()}")
-                    login(request , user)
-                    return redirect('profile' ,form['username'].value())
-                else :
-                    messages.error(
-                    request, "Wrong password.")
-                    return redirect('login')
-            else :
+            username = f"{form.cleaned_data['username']}"
+            password = f"{form.cleaned_data['password']}"
+            print(username)
+            print(password)
+            user = authenticate(request, username=username, password=password)
+            print(user)
+            if user:
+                login(request, user)
+                return redirect('profile')
+            else:
                 messages.error(
-                    request, "Not exist.")
+                    request, 'Invalid username or password.')
                 return redirect('login')
         else:
             messages.error(
                 request, "Wrong input data please re enter it.")
             return redirect('login')
 
+
 class createView (View):
     def get(self, request):
         return render(request, 'blog/create.html')
 
     def post(self, request):
-        user = get_object_or_404(User,id=request.user.id)
-        group_user = get_object_or_404(Group,name= "User-Group")
+        user = get_object_or_404(User, id=request.user.id)
+        group_user = get_object_or_404(Group, name="User-Group")
 
         if not user.groups.filter(name=group_user).exists():
             title = request.POST['title']
             status = request.POST['status']
             content = request.POST['content']
-            Post.objects.create(title=title, statue=status,
+            category = request.POST['categories']
+            Post.objects.create(title=title, statue=status, categories=category,
                                 content=content, owner=request.user)
             return redirect('index')
         else:
@@ -104,63 +174,74 @@ class createView (View):
 class DetailPostView(DetailView):
 
     def get(self, request, pk):
-
-        comments = Comment.objects.all().filter(post_id=pk).order_by('publish_data')
-        post = Post.objects.all().filter(id=pk)
-        return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post[0]})
+        post = get_object_or_404(Post, id=pk)
+        comments = Comment.objects.filter(post=post).order_by('-publish_data')
+        return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post})
 
     def post(self, request, pk):
+        # this is wrong we have to make if only when it comes from comment button because we are going to to add like button
         Comment.objects.create(
             post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id)
-        return redirect('detail_post',pk)
-    
-def deleteAccount (request , user) :
-    if request.method == 'GET' :
+        return redirect('detail_post', pk)
+
+
+def deleteAccount(request, user):
+    if request.method == 'GET':
         logout(request)
-        get_object_or_404(User , username = user).delete() 
+        get_object_or_404(User, username=user).delete()
         return redirect('index')
-    else :
+    else:
         return HttpResponse('Bad request')
 
-class changePass (PasswordChangeView) :
+
+class changePass (PasswordChangeView):
     def get(self, request):
         form = ChangeForm
         return render(request, 'blog/change password.html', {'form': form})
-    def post (self , request) :
-        form = ChangeForm(request.POST) 
-        if (form.is_valid()) :
-            if check_password(form['old_password'].value() , request.user.password) :
-                if (form['new_password1'].value() == form['new_password2'].value()):
-                    request.user.set_password(form['new_password1'].value())
-                    request.user.save()
-                    update_session_auth_hash(request , request.user)
-                    messages.success(
-                        request, "Your password changed")
-                    return redirect('profile' , request.user)
-                else :
-                    messages.error(
-                    request, "Wrong input data")
-                    return redirect('changepassword')
-            else :
+
+    def post(self, request):
+        form = ChangeForm(request.POST)
+        if (form.is_valid()):
+            if check_password(form['old_password'].value(), request.user.password) and (form['new_password1'].value() == form['new_password2'].value()):
+
+                request.user.set_password(form['new_password1'].value())
+                request.user.save()
+                update_session_auth_hash(request, request.user)
+                messages.success(
+                    request, "Your password changed")
+                return redirect('profile', request.user)
+            else:
                 messages.error(
-                request, "Wrong input data")
+                    request, "Wrong input data")
                 return redirect('changepassword')
-        else :
-         messages.error(
+        else:
+            messages.error(
                 request, "Wrong input data")
         return redirect('changepassword')
-class deletePost (View) :
-    pass
-
-class editPost (View) :
-    pass
 
 
-class profileView (View) :
-    def get (self , request , user) :
-        posts = Post.objects.all().filter(owner_id = request.user.id)
-        return render(request , 'users/profile.html' , {'user' : request.user , 'posts' : posts })
-    
+class profileView (View):
+    def get(self, request):
+        # Retrieve all posts by the user
+        posts = Post.objects.filter(
+            owner=request.user.id).order_by('-publish_date')
+
+        # Check if 'status' parameter is passed in the request
+        status_param = request.GET.get('status', None)
+
+        # Initialize current_state with a default value of "published"
+        # Default to "published" if no status parameter is provided
+        current_state = "published"
+
+        if status_param == 'draft':
+            posts = posts.filter(statue=Post.Status.DRAFT)
+            current_state = "draft"
+        else:
+            status_param == 'published'
+            posts = posts.filter(statue=Post.Status.PUBLISHED)
+            current_state = "published"
+
+        return render(request, 'users/profile.html', {'user': request.user, 'posts': posts, 'current_state': current_state})
 
 
 class PostEditView(View):
@@ -173,12 +254,14 @@ class PostEditView(View):
         title = request.POST['title']
         status = request.POST['status']
         content = request.POST['content']
+        category = request.POST['categories']
         post.title = title
-        post.status = status
+        post.statue = status
+        post.categories = category
         post.content = content
         post.save()
         return redirect('index')
-    
+
 
 class PostDeleteView(View):
     def get(self, request, pk):
@@ -198,3 +281,20 @@ class EditUserProfileView(generic.UpdateView):
 
     def get_object(self):
         return self.request.user
+
+
+class deletePost (View):
+    pass
+
+
+class editPost (View):
+    pass
+
+
+class like (View):
+    def get(self, request):
+        return redirect(request.META.get('HTTP_REFERER'))
+
+
+def admin(request):
+    return redirect('/admin/auth/user')

@@ -2,21 +2,27 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-{% for message in messages %}
-<div class="alert bg-danger alert-dismissible fade show" role="alert">
-    <strong>{{ message.tags }} {{ message }}</strong> .
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="del()" id = "del">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>     
-{% endfor %}
-
-
+    {% if user.is_authenticated %}
+    <p> test </p>
+    <script>
+        window.location.replace("{% url 'profile' %}")
+    </script>
+    {% else %}
     <div class="row">
         <div class="col-11 col-md-4 mx-auto mt-5">
+            <div class="btn-group btn-group-toggle mb-3 mx-5 mt-4" data-toggle="buttons">
+                <button class="btn btn-outline-info {% if status == 'user' or status == '' %}active{% endif %}" href="?status=published" id = "user">
+                    User
+                </button>
+                <button class="btn btn-outline-info {% if status == 'company' %}active{% endif %}" href="?status=draft" id = "company">
+                    Company
+                </button>
+            </div>
             <h1 class="text-info">Sign UP</h1>
-            <form method="POST">
+
+            <form method="POST" >
                 {% csrf_token %}
+                <input type="hidden"  value = "{{status}}" name = data>
                 {{form | crispy}}
                 <button class="btn btn-info" type="submit">Sign Up</button>
             </form>
@@ -25,6 +31,13 @@
             </div>
         </div> 
     </div>
-        
-
+    {% endif %}
+    <script>
+        document.getElementById('user').addEventListener( 'click' , function(){
+            window.location.replace("{%url 'register'%}?status=user")
+        })
+        document.getElementById('company').addEventListener('click' , function(){
+            window.location.replace("{%url 'register'%}?status=company")
+        })
+    </script>
 {% endblock content%}
