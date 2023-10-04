@@ -2,20 +2,61 @@
 
 - email added for the opt authentication 
 - adding likes
-- adding first and last name to the sign up form 
+- adding first and last name to the sign up form (done) 
 - adding unit testing 
-- when sign in as admin in admin panel it also signed in in the main project
-  so the only found solution is to make another app called admin and implement admin functionalities 
 - add middleware for delaying message delete 
 - manage messages in the base.html --> (done)
-- bug if i sign in in the main app but an admin sign in the admin panel the main app will be signed in with the admin 
-  temp solve is to prevent admin from visiting the main app for now !
-- A solution is very simple implement another class called users that inherits from user 
-  and when check authentication 
 - empty comment 
 
 
 - a writer should have a Company
 - user without company is a signed user
 - company is a model 
-- 
+- handle permissions
+- handle company profile
+
+
+
+
+
+all permissions
+add_logentry
+change_logentry
+delete_logentry
+view_logentry
+add_group
+change_group
+delete_group
+view_group
+add_permission
+change_permission
+delete_permission
+view_permission
+add_user
+change_user
+delete_user
+view_user
+add_comment
+change_comment
+delete_comment
+view_comment
+add_company
+change_company
+delete_company
+view_company
+add_companywriters
+change_companywriters
+delete_companywriters
+view_companywriters
+add_post
+change_post
+delete_post
+view_post
+add_contenttype
+change_contenttype
+delete_contenttype
+view_contenttype
+add_session
+change_session
+delete_session
+view_session

@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from .forms import *
-from django.http import HttpResponse
-from django.views.generic import ListView, DetailView
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.views.generic import DetailView
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth import logout, login, authenticate
 from django.contrib import messages
@@ -13,7 +13,6 @@ from django.contrib.auth import update_session_auth_hash
 from django.views import generic
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
-from django.contrib.auth.hashers import make_password
 
 # Create your views here.
 
@@ -24,7 +23,7 @@ categories = {
 }
 
 
-class Index(ListView):
+class Index(View):
     def get(self, request):
         post = Post.objects.none()
         is_category_selected = 0
@@ -48,16 +47,6 @@ class Index(ListView):
             else:
                 categories[category] = False
         return redirect('index')
-
-
-class DraftPosts(ListView):
-    def get(self, request):
-
-        post = Post.objects.all().filter(owner=request.user.id,  statue=Post.Status.DRAFT)
-        return render(request, 'blog/draft.html', {'post': post})
-
-    def post(self, request):
-        pass
 
 
 class RegisterView(View):
@@ -94,32 +83,25 @@ class RegisterView(View):
                     User, username=form.cleaned_data['username'])
                 user.first_name = form['first'].value()
                 user.last_name = form['last'].value()
+                group = ""
                 if form.cleaned_data['is_superuser'] == True:
                     group = get_object_or_404(Group, name="Admin-Group")
-                    user.groups.add(group)
                     user.is_staff = True
-                    user.save()
-                elif form.cleaned_data['is_staff'] == True:
-                    group = get_object_or_404(Group, name='Editor-Group')
-                    user.groups.add(group)
-                    user.save()
                 else:
                     group = get_object_or_404(Group, name='User-Group')
-                    user.groups.add(group)
-                    user.save()
+
+                user.groups.add(group)
+                user.save()
                 user = authenticate(
                     request, username=f"{form['username'].value()}", password=f"{form['password1'].value()}")
                 login(request, user)
             messages.success(
                 request, "Your are signed up successfully")
-            return redirect('profile')
+            return redirect('profile', user=user.username)
         else:
-            if (is_company):
-                url = reverse_lazy('register' + '?status=company')
-                print(url)
-                messages.error(
-                    request, "Wrong input data please re enter it.")
-                return redirect('register')
+            messages.error(
+                request, "Wrong input data please re enter it.")
+            return JsonResponse({"message": "wrong"})
 
 
 class loginView (View):
@@ -128,19 +110,15 @@ class loginView (View):
         return render(request, 'users/login.html', {'form': form})
 
     def post(self, request):
-        print(request.user)
         form = UserLoginForm(request.POST)
 
         if form.is_valid():
             username = f"{form.cleaned_data['username']}"
             password = f"{form.cleaned_data['password']}"
-            print(username)
-            print(password)
             user = authenticate(request, username=username, password=password)
-            print(user)
             if user:
                 login(request, user)
-                return redirect('profile')
+                return redirect('profile', user=user.username)
             else:
                 messages.error(
                     request, 'Invalid username or password.')
@@ -176,13 +154,16 @@ class DetailPostView(DetailView):
     def get(self, request, pk):
         post = get_object_or_404(Post, id=pk)
         comments = Comment.objects.filter(post=post).order_by('-publish_data')
-        return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post})
+        return render(request, 'blog/blog_post.html', {'comments': comments, 'post': post, 'id': pk})
 
     def post(self, request, pk):
         # this is wrong we have to make if only when it comes from comment button because we are going to to add like button
-        Comment.objects.create(
-            post_id=pk, comment_content=request.POST['comment_field'], user_id=request.user.id)
-        return redirect('detail_post', pk)
+        if (request.POST.get('want') == 'comment'):
+            Comment.objects.create(
+                post_id=pk, comment_content=request.POST.get('data'), user_id=request.user.id)
+            return JsonResponse({'message': 'success'})
+        else:
+            return JsonResponse({'message': 'fail'})
 
 
 def deleteAccount(request, user):
@@ -221,10 +202,14 @@ class changePass (PasswordChangeView):
 
 
 class profileView (View):
-    def get(self, request):
+    def get(self, request, user):
         # Retrieve all posts by the user
+        currentUser = get_object_or_404(User, username=user)
+        if (currentUser.id != request.user.id):
+            if (request.GET.get('status') == 'draft'):
+                return HttpResponseForbidden()
         posts = Post.objects.filter(
-            owner=request.user.id).order_by('-publish_date')
+            owner=currentUser.id).order_by('-publish_date')
 
         # Check if 'status' parameter is passed in the request
         status_param = request.GET.get('status', None)
@@ -237,11 +222,10 @@ class profileView (View):
             posts = posts.filter(statue=Post.Status.DRAFT)
             current_state = "draft"
         else:
-            status_param == 'published'
             posts = posts.filter(statue=Post.Status.PUBLISHED)
             current_state = "published"
 
-        return render(request, 'users/profile.html', {'user': request.user, 'posts': posts, 'current_state': current_state})
+        return render(request, 'users/profile.html', {'currentUser': currentUser, 'posts': posts, 'current_state': current_state})
 
 
 class PostEditView(View):
@@ -283,11 +267,15 @@ class EditUserProfileView(generic.UpdateView):
         return self.request.user
 
 
-class deletePost (View):
+def admin(request):
+    return redirect('/admin/auth/user')
+
+
+def editComment():
     pass
 
 
-class editPost (View):
+def deleteComment():
     pass
 
 
@@ -296,5 +284,9 @@ class like (View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 
-def admin(request):
-    return redirect('/admin/auth/user')
+def acceptWriter(request, user):
+    pass
+
+
+def rejectWriter(request, user):
+    pass

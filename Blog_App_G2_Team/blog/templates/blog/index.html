@@ -6,13 +6,10 @@
             <h1 class="fw-bolder">Blogs</h1>
         </div>
         <!--edit this important-->
-        {% if not  request.user|is_viewer %} 
+        {% if request.user|permission:'add_post' %} 
             <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5 ">
                 <a href="{% url 'Create' %}" class="btn btn-outline-secondary"><i class='bx bx-plus'></i> Create a new post</a>
             </div>
-            <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5 ">
-                <a href="{% url 'draft_posts' %}" class="btn btn-success"><i class='bx bx-plus'></i> Show your Drafts</a>
-                </div>
         {% endif %}
 
         <form method = "post" >

@@ -62,7 +62,11 @@ class CompanyWriters (models.Model):
     )
     Writer = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        unique=True
     )
+
+    def __str__(self):
+        return f'{self.company.name} --> {self.Writer.username}'
 
 # Create your models here.

@@ -3,9 +3,8 @@
 
 {% block content %}
     {% if user.is_authenticated %}
-        <p> test </p>
         <script>
-            window.location.replace("{% url 'profile' %}")
+            window.location.replace("{% url 'profile' user=user.username %}")
         </script>
     {% else %}
     <div class="row">
