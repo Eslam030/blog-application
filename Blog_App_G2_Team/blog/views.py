@@ -22,14 +22,15 @@ class Index(View):
         is_category_selected = 0
         categoriesToCheck = categories.objects.all()
         for category in categoriesToCheck:
-            print(category.checked)
             if (category.checked):
                 is_category_selected = 1
-                post |= Post.objects.all().filter(statue=Post.Status.PUBLISHED, categories=category)
+                post |= Post.objects.all().filter(categories=category)
+
         if (is_category_selected == 0):
             post = Post.objects.all().filter(
                 statue=Post.Status.PUBLISHED).order_by('-publish_date')
-        post.order_by("-publish_date")
+
+        post = post.order_by('-publish_date')
         paginate = Paginator(post, 3)
         page_num = request.GET.get('page')
         page = paginate.get_page(page_num)
@@ -37,6 +38,7 @@ class Index(View):
 
     def post(self, request):
         categoriesToCheck = categories.objects.all()
+        print(request.POST)
         for category in categoriesToCheck:
             if (request.POST.get(category.name)):
                 category.checked = True
@@ -44,6 +46,7 @@ class Index(View):
             else:
                 category.checked = False
                 category.save()
+
         return redirect('index')
 
 
@@ -129,19 +132,26 @@ class loginView (View):
 
 class createView (View):
     def get(self, request):
-        return render(request, 'blog/create.html')
+        category = categories.objects.all()
+        return render(request, 'blog/create.html', {'categories': category})
 
     def post(self, request):
         user = get_object_or_404(User, id=request.user.id)
         group_user = get_object_or_404(Group, name="User-Group")
-
         if not user.groups.filter(name=group_user).exists():
             title = request.POST['title']
             status = request.POST['status']
             content = request.POST['content']
-            category = request.POST['categories']
-            Post.objects.create(title=title, statue=status, categories=category,
-                                content=content, owner=request.user)
+            category = get_object_or_404(
+                categories, name=request.POST['categories'])
+            post = Post()
+            post.title = title
+            post.statue = status
+            post.content = content
+            post.owner = request.user
+            post.save()
+            post.categories.add(category)
+            post.save()
             return redirect('index')
         else:
             return redirect('index')
@@ -269,14 +279,6 @@ def admin(request):
     return redirect('/admin/auth/user')
 
 
-def editComment():
-    pass
-
-
-def deleteComment():
-    pass
-
-
 class like (View):
     def get(self, request):
         return redirect(request.META.get('HTTP_REFERER'))
@@ -288,3 +290,19 @@ def acceptWriter(request, user):
 
 def rejectWriter(request, user):
     pass
+
+
+def editComment():
+    pass
+
+
+def deleteComment():
+    pass
+
+
+def addCategory(request):
+    if request.method == 'POST':
+        categories.objects.create(name=request.POST.get('category'))
+        return JsonResponse({'message': 'success'})
+    else:
+        return HttpResponseForbidden()

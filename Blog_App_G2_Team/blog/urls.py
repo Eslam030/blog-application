@@ -18,4 +18,5 @@ urlpatterns = [
     path('editprofile/', views.EditUserProfileView.as_view(), name='edit_profile'),
     path('admin/', views.admin, name='admin'),
     path('like/', views.like.as_view(), name='like'),
+    path('addCategory', views.addCategory, name="add_category")
 ]

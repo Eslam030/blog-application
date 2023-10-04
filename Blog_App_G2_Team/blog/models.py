@@ -4,20 +4,21 @@ from tinymce.models import HTMLField
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 
-class Post (models.Model):
+class categories (models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    checked = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
+
+class Post (models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DF', 'Draft'
         PUBLISHED = 'PB', 'Published'
 
-    class Category(models.TextChoices):
-        NEWS = 'News', 'News'
-        TUTORIAL = 'Tutorial', 'Tutorial'
-        BUSINESS = 'Business', 'Business'
-
     title = models.CharField(max_length=255)
     statue = models.CharField(max_length=2, choices=Status.choices)
-    categories = models.CharField(max_length=10, choices=Category.choices)
     content = HTMLField()
     owner = models.ForeignKey(
         User,
@@ -25,6 +26,7 @@ class Post (models.Model):
         related_name='posts_owner'
     )
     publish_date = models.DateTimeField(auto_now_add=True)
+    categories = models.ManyToManyField('categories')
 
     def __str__(self):
         return self.title
@@ -69,8 +71,4 @@ class CompanyWriters (models.Model):
     def __str__(self):
         return f'{self.company.name} --> {self.Writer.username}'
 
-
-class categories (models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    checked = models.BooleanField()
 # Create your models here.

@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% load new_filters %}
+{{csrf_token}}
 {% block content %}
     <div class="row">
         <div class="col-md-6 col-12 mx-md-auto mx-3 mt-5 mb-5">
@@ -10,6 +11,15 @@
             <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5 ">
                 <a href="{% url 'Create' %}" class="btn btn-outline-secondary"><i class='bx bx-plus'></i> Create a new post</a>
             </div>
+            <div class="col-md-2 col-12 mx-md-auto mx-3 mt-5 mb-5">
+                <a href="#" id="createCategoryBtn" class="btn btn-outline-info"><i class='bx bxs-category'></i> Create Category</a>
+            </div>
+            
+            <div class="col-md-2 col-12 mx-md-auto mx-5 mt-5 mb-5" style="display: none;" id="categoryFormContainer">
+                <input type="text" id="categoryInput" class="form-control" placeholder="Category Name">
+                <button id="createCategorySubmit" class="btn btn-primary mt-3">Add</button>
+                <button class="btn btn-outline-info mt-3 ml-3" id = "cancel">Cancel</button>
+            </div>
         {% endif %}
 
         <form method = "post" >
@@ -19,12 +29,12 @@
                 {% for category in categories %}
                 <div class="form-check">
                     {% if category.checked %}
-                    <input class="form-check-input" type="checkbox" name = "Tutorial" checked>
+                    <input class="form-check-input" type="checkbox" name = "{{category.name}}" checked>
                     {% else %}
-                    <input class="form-check-input" type="checkbox" name = "Tutorial">
+                    <input class="form-check-input" type="checkbox" name = "{{category.name}}">
                     {% endif %}
                     <label class="form-check-label" for="defaultCheck1">
-                        Tutorial
+                        {{category.name}}
                     </label>
                 </div>
                 {% endfor %}
@@ -80,4 +90,40 @@
             </nav>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $('#cancel').click(function(){
+                $('#categoryInput').val('')
+                $('#categoryFormContainer').css('display' , 'none')
+                $('#createCategoryBtn').css('display' , 'block')
+            })
+            // Add a click event listener to the "Create Category" button
+            $('#createCategoryBtn').click(function(){
+                // Hide the button
+                $(this).css('display' , 'none' )
+                // Show the input field and new button
+                $('#categoryFormContainer').css('display' , 'block')
+                // Focus on the input field
+                $('#categoryFormContainer').focus()
+            })
+            
+            $('#createCategorySubmit').click(function(){
+                $.ajax({
+                    url :"{% url 'add_category' %}" , 
+                    method : 'POST' ,
+                    data : {'category' : $('#categoryInput').val()} ,
+                    headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success : function (res) {
+                        $('#categoryInput').val('')
+                        $('#categoryFormContainer').css('display' , 'none')
+                        $('#createCategoryBtn').css('display' , 'block')
+                        window.location.reload()
+                    }
+                })
+            }) 
+        });
+    </script>
 {% endblock content %}
