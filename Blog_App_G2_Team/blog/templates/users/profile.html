@@ -56,12 +56,12 @@
     </div>
     <h3 class="mx-5">My Posts</h3>
     <div class="btn-group btn-group-toggle mb-3 mx-5 mt-4" data-toggle="buttons">
-        <a class="btn btn-outline-info {% if current_state == 'published' %}active{% endif %}" href="?status=published">
+        <button class="btn btn-outline-info {% if current_state == 'published' or current_state == '' %}active{% endif %}" id = "published">
             Published
-        </a>
-        <a class="btn btn-outline-info {% if current_state == 'draft' %}active{% endif %}" href="?status=draft">
+        </button>
+        <button class="btn btn-outline-info {% if current_state == 'draft' %}active{% endif %}" id = "draft">
             Drafts
-        </a>
+        </button>
     </div>
 
     <div class="row">
@@ -92,37 +92,12 @@
 
     <script>
     // JavaScript to handle switching between Posts and Drafts
-    const option1 = document.getElementById('option1');
-    const option2 = document.getElementById('option2');
-    const posts = document.querySelectorAll('.col-md-6');
-
-    option1.addEventListener('change', () => {
-        option2.checked = !option1.checked;
-        if (option1.checked) {
-        // Show Posts
-        posts.forEach(post => {
-            if (post.classList.contains('published')) {
-            post.style.display = 'none';
-            } else {
-            post.style.display = '';
-            }
-        });
-        }
-    });
-
-    option2.addEventListener('change', () => {
-        option1.checked = !option2.checked;
-        if (option2.checked) {
-        // Show Drafts
-        posts.forEach(post => {
-            if (post.classList.contains('draft')) {
-            post.style.display = '';
-            } else {
-            post.style.display = 'none';
-            }
-        });
-        }
-    });
+    document.getElementById('published').addEventListener('click' , function(){
+        window.location.replace("{% url 'profile' %}?status=published")
+    }) 
+    document.getElementById('draft').addEventListener('click' , function(){
+        window.location.replace("{% url 'profile' %}?status=draft")
+    })
     </script>
 </div>
 
